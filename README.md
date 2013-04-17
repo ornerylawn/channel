@@ -10,6 +10,6 @@ string* s = new string("hello there!");
 // Send returns whether or not the channel is full.
 while (!c.Send(s)) ;
 // Receive returns whether or not there was anything to receive.
-std::string* t;
+string* t;
 while (!c.Receive(&t)) ;
 ```
