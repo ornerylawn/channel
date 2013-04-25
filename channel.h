@@ -16,7 +16,8 @@ class Channel {
 public:
   // Create a channel with capacity n. The channel actually has n + 1
   // elements but one of them is a dummy.
-  Channel(int n) : n_(n + 1), size_mask_(n), buf_(new T[n + 1]), r_(0), w_(0) {
+  explicit Channel(int n)
+    : n_(n + 1), size_mask_(n), buf_(new T[n + 1]), r_(0), w_(0) {
     assert((n & (n + 1)) == 0);
   }
   ~Channel() { delete[] buf_; }
