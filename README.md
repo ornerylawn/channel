@@ -13,3 +13,5 @@ while (!c.Send(s)) ;
 string* t;
 while (!c.Receive(&t)) ;
 ```
+
+The example in `example/example.cc` shows how to use it to make a .wav file player.
