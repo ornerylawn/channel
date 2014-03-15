@@ -2,28 +2,28 @@
 // ensure that all operations are time-deterministic. It is only safe
 // with one sender and one receiver.
 
-// Note: The capacity must be specified as one less than a power of 2
-// (e.g. 31). This allows for some optimization because the buffer's
-// size is one more than the capacity.
-
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
 #include <cassert>
+#include <cmath>
 
 template <class T>
 class Channel {
 public:
-  // Create a channel with capacity n. The channel actually has n + 1
-  // elements but one of them is a dummy.
-  explicit Channel(int n)
-    : n_(n + 1), size_mask_(n), buf_(new T[n + 1]), r_(0), w_(0) {
-    assert((n & (n + 1)) == 0);
+  // Create a channel with capacity n.
+  explicit Channel(int capacity) : cap_(capacity), r_(0), w_(0) {
+    assert(capacity >= 0);
+    // Round up to next power of 2.
+    int power = floor(log(capacity)/log(2)) + 1;
+    size_ = 1 << power;
+    size_mask_ = size_ - 1;
+    buf_ = new T[size_];
   }
   ~Channel() { delete[] buf_; }
 
   // The capacity passed to the constructor.
-  int capacity() const { return n_ - 1; }
+  int capacity() const { return cap_; }
 
   // Returns true if the item was put onto the channel (the channel
   // was not already full).
@@ -34,7 +34,8 @@ public:
   bool Receive(T* item);
 
 private:
-  int n_;
+  int cap_;
+  int size_;
   int size_mask_;
   T *buf_;
   // r_ and w_ are volatile here to ensure that the writer doesn't use
@@ -46,14 +47,14 @@ private:
 
 template <class T>
 bool Channel<T>::Send(const T &t) {
+  int r = r_;
   int w = w_;
   int next = (w + 1) & size_mask_;
-  int r = r_;
   // We need a read-acquire here to prevent the following check from
   // using old values of w_ and r_.
   __sync_synchronize();
   // Is the buffer full?
-  if (next == r) {
+  if (((w > r) ? w - r : w - r + size_) == cap_) {
     return false;
   }
   buf_[w] = t;
