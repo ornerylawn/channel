@@ -1,17 +1,18 @@
-Channel
-=======
+# Channel
 
-Lock-free ring buffer for inter-thread communication.
+Wait-free ring buffer for inter-thread communication using C++11
+atomics.
 
 ```c++
-// Create a channel that can hold up to 15 string* at once. 
 Channel<string*> c(15);
 string* s = new string("hello there!");
-// Send returns whether or not the channel is full.
-while (!c.Send(s)) ;
-// Receive returns whether or not there was anything to receive.
+if (!c.Send(s)) {
+  // Send returns false if the channel is full
+}
 string* t;
-while (!c.Receive(&t)) ;
+if (!c.Receive(&t)) {
+  // Receive returns false if the channel is empty
+}
 ```
 
-The example in `example/example.cc` shows how to use it to make a .wav file player.
+See https://github.com/rynlbrwn/spkr to see a real example.
